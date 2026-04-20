@@ -1,0 +1,78 @@
+site_name: labflow
+site_description: Opinionated scientific workflow manager
+site_url: https://cnnc-lab.github.io/labflow/
+repo_url: https://github.com/CNNC-Lab/labflow
+repo_name: CNNC-Lab/labflow
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Getting started:
+    - Install: getting-started/install.md
+    - First experiment: getting-started/first-experiment.md
+    - First sweep: getting-started/first-sweep.md
+    - First SLURM submission: getting-started/first-slurm-submission.md
+  - Concepts:
+    - Experiments: concepts/experiments.md
+    - Configs and overrides: concepts/configs-and-overrides.md
+    - Env resolvers: concepts/env-resolvers.md
+    - HPC systems registry: concepts/hpc-systems-registry.md
+    - Manifests: concepts/manifests.md
+    - Snakemake integration: concepts/snakemake-integration.md
+  - Guides:
+    - Migrating from NMSAT: guides/migrating-from-nmsat.md
+    - Backends:
+      - Apptainer: guides/backends/apptainer.md
+    - Systems:
+      - Local: guides/systems/local.md
+      - Deucalion ARM: guides/systems/deucalion-arm.md
+      - Deucalion x86: guides/systems/deucalion-x86.md
+      - Deucalion GPU: guides/systems/deucalion-gpu.md
+  - Examples:
+    - OU simulation: examples/ou-simulation.md
+  - Contributing:
+    - Development: contributing/development.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_root_heading: true
+            show_source: false
