@@ -23,4 +23,4 @@ CLI:
 from labflow.registry import ExperimentRegistry, SystemRegistry, experiment, sweep
 
 __version__ = "0.1.0"
-__all__ = ["ExperimentRegistry", "SystemRegistry", "experiment", "sweep", "__version__"]
+__all__ = ["ExperimentRegistry", "SystemRegistry", "__version__", "experiment", "sweep"]

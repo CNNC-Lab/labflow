@@ -12,7 +12,7 @@ def _run(cmd: list[str], cwd: Path) -> tuple[int, str, str]:
 
 
 def test_labflow_help():
-    code, out, err = _run(["labflow", "--help"], Path.cwd())
+    code, out, _err = _run(["labflow", "--help"], Path.cwd())
     assert code == 0
     assert "Usage" in out or "usage" in out
 
@@ -22,7 +22,7 @@ def test_labflow_new_creates_experiment(tmp_path: Path):
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"\n')
     (tmp_path / ".labflow.yaml").write_text("env:\n  backend: venv\n")
 
-    code, out, err = _run(
+    code, _out, err = _run(
         ["labflow", "new", "my_exp", "--template", "simulation-jax"],
         tmp_path,
     )
@@ -36,6 +36,6 @@ def test_labflow_run_local(tmp_path: Path):
 
     _run(["labflow", "new", "hello", "--template", "simulation-jax"], tmp_path)
 
-    code, out, err = _run(["labflow", "run", "hello"], tmp_path)
+    _code, out, err = _run(["labflow", "run", "hello"], tmp_path)
     # Either succeeds (if minimal template runs) or fails with a clear error message
     assert "hello" in (out + err).lower()
