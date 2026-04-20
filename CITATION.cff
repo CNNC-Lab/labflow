@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use labflow, please cite it as below."
+title: "labflow: an opinionated scientific workflow manager"
+authors:
+  - family-names: "Duarte"
+    given-names: "Renato"
+    orcid: "https://orcid.org/0000-0002-1052-1999"
+repository-code: "https://github.com/CNNC-Lab/labflow"
+url: "https://cnnc-lab.github.io/labflow/"
+license: MIT
+version: "0.1.0"
+date-released: "2026-04-20"
+keywords:
+  - scientific computing
+  - workflow
+  - reproducibility
+  - slurm
+  - hpc
+  - computational neuroscience
