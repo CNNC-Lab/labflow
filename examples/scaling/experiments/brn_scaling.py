@@ -26,14 +26,14 @@ from labflow import experiment
 @dataclass
 class ScalingConfig:
     # --- scaling controls ---
-    threads: int = 1            # OpenMP threads (local_num_threads)
-    n_per_thread: int = 2500    # WEAK scaling: total neurons = n_per_thread * threads
-    n_total_fixed: int = 0      # STRONG scaling: if >0, use this fixed total (ignores n_per_thread)
+    threads: int = 1  # OpenMP threads (local_num_threads)
+    n_per_thread: int = 2500  # WEAK scaling: total neurons = n_per_thread * threads
+    n_total_fixed: int = 0  # STRONG scaling: if >0, use this fixed total (ignores n_per_thread)
     # --- network ---
-    epsilon: float = 0.1        # connection probability (sparse random)
-    g: float = 5.0              # relative inhibitory strength (J_inh = -g*J)
-    eta: float = 2.0            # external rate as multiple of threshold rate
-    J: float = 0.1              # excitatory PSP amplitude (mV)
+    epsilon: float = 0.1  # connection probability (sparse random)
+    g: float = 5.0  # relative inhibitory strength (J_inh = -g*J)
+    eta: float = 2.0  # external rate as multiple of threshold rate
+    J: float = 0.1  # excitatory PSP amplitude (mV)
     delay_ms: float = 1.5
     # --- neuron (Brunel iaf_psc_delta defaults) ---
     tau_m_ms: float = 20.0
@@ -54,26 +54,33 @@ def brn_scaling(cfg: ScalingConfig) -> dict:
     n_total = cfg.n_total_fixed if cfg.n_total_fixed > 0 else cfg.n_per_thread * cfg.threads
     n_exc = (n_total * 4) // 5
     n_inh = n_total - n_exc
-    c_exc = max(1, int(cfg.epsilon * n_exc))   # excitatory in-degree
-    c_inh = max(1, int(cfg.epsilon * n_inh))   # inhibitory in-degree
+    c_exc = max(1, int(cfg.epsilon * n_exc))  # excitatory in-degree
+    c_inh = max(1, int(cfg.epsilon * n_inh))  # inhibitory in-degree
 
     # External drive: rate relative to the network's threshold (rheobase) rate.
-    nu_th = cfg.V_th_mV / (cfg.J * c_exc * cfg.tau_m_ms)      # kHz (mV / (mV*ms))
+    nu_th = cfg.V_th_mV / (cfg.J * c_exc * cfg.tau_m_ms)  # kHz (mV / (mV*ms))
     nu_ext = cfg.eta * nu_th
-    p_rate_hz = 1000.0 * nu_ext * c_exc                      # Poisson generator rate (Hz)
+    p_rate_hz = 1000.0 * nu_ext * c_exc  # Poisson generator rate (Hz)
 
     nest.ResetKernel()
-    nest.SetKernelStatus({
-        "local_num_threads": cfg.threads,   # set BEFORE Create()
-        "rng_seed": cfg.seed,
-        "resolution": 0.1,
-        "print_time": False,
-        "overwrite_files": True,
-    })
+    nest.SetKernelStatus(
+        {
+            "local_num_threads": cfg.threads,  # set BEFORE Create()
+            "rng_seed": cfg.seed,
+            "resolution": 0.1,
+            "print_time": False,
+            "overwrite_files": True,
+        }
+    )
 
     neuron_params = {
-        "tau_m": cfg.tau_m_ms, "V_th": cfg.V_th_mV, "V_reset": cfg.V_reset_mV,
-        "t_ref": cfg.t_ref_ms, "C_m": cfg.C_m_pF, "E_L": 0.0, "V_m": 0.0,
+        "tau_m": cfg.tau_m_ms,
+        "V_th": cfg.V_th_mV,
+        "V_reset": cfg.V_reset_mV,
+        "t_ref": cfg.t_ref_ms,
+        "C_m": cfg.C_m_pF,
+        "E_L": 0.0,
+        "V_m": 0.0,
     }
 
     # ---- build phase (timed) ----

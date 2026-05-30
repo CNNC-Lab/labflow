@@ -33,15 +33,15 @@ from labflow import experiment
 @dataclass
 class BRNConfig:
     # network size
-    n_exc: int = 1000          # excitatory neurons
-    n_inh: int = 250           # inhibitory neurons (N_E:N_I = 4:1)
-    epsilon: float = 0.1       # connection probability (sparse random)
+    n_exc: int = 1000  # excitatory neurons
+    n_inh: int = 250  # inhibitory neurons (N_E:N_I = 4:1)
+    epsilon: float = 0.1  # connection probability (sparse random)
     # synapse
-    J: float = 0.1             # excitatory PSP amplitude (mV)
-    g: float = 5.0             # relative inhibitory strength (J_inh = -g*J); g>4 => inhibition-dominated
-    delay_ms: float = 1.5      # synaptic delay
+    J: float = 0.1  # excitatory PSP amplitude (mV)
+    g: float = 5.0  # relative inhibitory strength (J_inh = -g*J); g>4 => inhibition-dominated
+    delay_ms: float = 1.5  # synaptic delay
     # external drive (expressed relative to rheobase rate nu_thresh)
-    eta: float = 2.0           # external rate as a multiple of threshold rate (eta>1 => mean-driven)
+    eta: float = 2.0  # external rate as a multiple of threshold rate (eta>1 => mean-driven)
     # neuron (iaf_psc_delta, Brunel defaults)
     tau_m_ms: float = 20.0
     V_th_mV: float = 20.0
@@ -62,28 +62,35 @@ def balanced_random_network(cfg: BRNConfig) -> dict:
 
     # Thread discipline: configure the kernel BEFORE Create().
     nest.ResetKernel()
-    nest.SetKernelStatus({
-        "local_num_threads": cfg.threads,
-        "rng_seed": cfg.seed,
-        "resolution": 0.1,
-        "print_time": False,
-    })
+    nest.SetKernelStatus(
+        {
+            "local_num_threads": cfg.threads,
+            "rng_seed": cfg.seed,
+            "resolution": 0.1,
+            "print_time": False,
+        }
+    )
 
     # --- derived parameters ---
     n_total = cfg.n_exc + cfg.n_inh
-    c_exc = int(cfg.epsilon * cfg.n_exc)       # in-degree from excitatory pop
-    c_inh = int(cfg.epsilon * cfg.n_inh)       # in-degree from inhibitory pop
+    c_exc = int(cfg.epsilon * cfg.n_exc)  # in-degree from excitatory pop
+    c_inh = int(cfg.epsilon * cfg.n_inh)  # in-degree from inhibitory pop
     J_inh = -cfg.g * cfg.J
 
     # External Poisson rate that drives a neuron to threshold in isolation (Brunel eq.),
     # then scaled by eta. nu_thresh = V_th / (J * tau_m) converted to spikes/s.
-    nu_thresh = cfg.V_th_mV / (cfg.J * cfg.tau_m_ms) * 1e3   # Hz
+    nu_thresh = cfg.V_th_mV / (cfg.J * cfg.tau_m_ms) * 1e3  # Hz
     nu_ext = cfg.eta * nu_thresh
-    p_rate = nu_ext * c_exc                                  # total external rate (Hz) onto each neuron
+    p_rate = nu_ext * c_exc  # total external rate (Hz) onto each neuron
 
     neuron_params = {
-        "tau_m": cfg.tau_m_ms, "V_th": cfg.V_th_mV, "V_reset": cfg.V_reset_mV,
-        "t_ref": cfg.t_ref_ms, "C_m": cfg.C_m_pF, "E_L": 0.0, "V_m": 0.0,
+        "tau_m": cfg.tau_m_ms,
+        "V_th": cfg.V_th_mV,
+        "V_reset": cfg.V_reset_mV,
+        "t_ref": cfg.t_ref_ms,
+        "C_m": cfg.C_m_pF,
+        "E_L": 0.0,
+        "V_m": 0.0,
     }
 
     # --- build ---
@@ -127,7 +134,7 @@ def balanced_random_network(cfg: BRNConfig) -> dict:
         "n_total": n_total,
         "nu_ext_hz": float(nu_ext),
         "mean_rate_hz": mean_rate_hz,
-        "mean_cv_isi": mean_cv_isi,     # ~1.0 => irregular (AI regime); «1 => regular
+        "mean_cv_isi": mean_cv_isi,  # ~1.0 => irregular (AI regime); «1 => regular
         "n_recorded": n_rec,
         "n_spikes": int(times.size),
     }

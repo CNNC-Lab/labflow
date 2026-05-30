@@ -57,15 +57,19 @@ def main() -> int:
     xs, ys_speedup, ys_eff = [], [], []
     for r in runs:
         p = r["n_threads"]
-        speedup = t1 / r["total_time_s"]            # vs baseline threads
+        speedup = t1 / r["total_time_s"]  # vs baseline threads
         if weak:
-            eff = t1 / r["total_time_s"]            # ideal weak: time constant -> eff 1
-            line = (f"{p:>7} {r['n_total']:>9} {r['build_time_s']:>9.3f} "
-                    f"{r['sim_time_s']:>9.3f} {r['total_time_s']:>9.3f} {eff:>11.3f}")
+            eff = t1 / r["total_time_s"]  # ideal weak: time constant -> eff 1
+            line = (
+                f"{p:>7} {r['n_total']:>9} {r['build_time_s']:>9.3f} "
+                f"{r['sim_time_s']:>9.3f} {r['total_time_s']:>9.3f} {eff:>11.3f}"
+            )
         else:
-            eff = speedup / (p / p1)                 # ideal strong: speedup = p/p1
-            line = (f"{p:>7} {r['n_total']:>9} {r['build_time_s']:>9.3f} "
-                    f"{r['sim_time_s']:>9.3f} {r['total_time_s']:>9.3f} {speedup:>8.2f} {eff:>11.3f}")
+            eff = speedup / (p / p1)  # ideal strong: speedup = p/p1
+            line = (
+                f"{p:>7} {r['n_total']:>9} {r['build_time_s']:>9.3f} "
+                f"{r['sim_time_s']:>9.3f} {r['total_time_s']:>9.3f} {speedup:>8.2f} {eff:>11.3f}"
+            )
         print(line)
         xs.append(p)
         ys_speedup.append(speedup)
@@ -73,6 +77,7 @@ def main() -> int:
 
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
@@ -85,13 +90,21 @@ def main() -> int:
             axes[0].legend()
             axes[1].plot(xs, ys_eff, "o-")
             axes[1].axhline(1.0, ls="--", c="k")
-            axes[1].set(xlabel="threads", ylabel="parallel efficiency", ylim=(0, 1.1),
-                        title="Strong scaling — efficiency")
+            axes[1].set(
+                xlabel="threads",
+                ylabel="parallel efficiency",
+                ylim=(0, 1.1),
+                title="Strong scaling — efficiency",
+            )
         else:
             axes[0].plot(xs, ys_eff, "o-")
             axes[0].axhline(1.0, ls="--", c="k")
-            axes[0].set(xlabel="threads (N grows ∝ threads)", ylabel="weak efficiency (T₁/Tₚ)",
-                        ylim=(0, 1.2), title="Weak scaling")
+            axes[0].set(
+                xlabel="threads (N grows ∝ threads)",
+                ylabel="weak efficiency (T₁/Tₚ)",
+                ylim=(0, 1.2),
+                title="Weak scaling",
+            )
         fig.tight_layout()
         fig.savefig(args.out, dpi=130)
         print(f"\nPlot -> {args.out}")
