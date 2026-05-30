@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import itertools
 import json
 import sys
 from pathlib import Path
@@ -43,6 +44,38 @@ def _discover_experiments(experiments_dir: Path) -> None:
                 spec.loader.exec_module(mod)
             except Exception as e:
                 console.print(f"[yellow]Warning: failed to import {py}: {e}[/yellow]")
+
+
+def _require_experiment(experiment_name: str, project_root: Path):
+    """Discover experiments and return the named one, or exit with an error."""
+    _discover_experiments(project_root / "experiments")
+    if experiment_name not in ExperimentRegistry.list():
+        console.print(f"[red]Experiment {experiment_name!r} not found[/red]")
+        console.print(f"Registered: {ExperimentRegistry.list()}")
+        sys.exit(1)
+    return ExperimentRegistry.get(experiment_name)
+
+
+def _run_one(meta, overrides: dict[str, str], project_root: Path, system: str) -> dict:
+    """Build the config from defaults + string overrides, then launch one run.
+
+    Each override string is cast to the type of the dataclass field's default.
+    The dataclass instance (not a dict) is passed to the launcher, per the
+    @experiment contract.
+    """
+    cfg = meta.config_cls()
+    for k, v in overrides.items():
+        if hasattr(cfg, k):
+            cur = getattr(cfg, k)
+            try:
+                v_cast = type(cur)(v)
+            except Exception:
+                v_cast = v
+            setattr(cfg, k, v_cast)
+    reg = SystemRegistry.from_path()
+    spec = reg.get(system)
+    launcher = get_launcher(spec, output_root=project_root / "outputs")
+    return launcher.run(meta.func, cfg)
 
 
 @click.group()
@@ -101,34 +134,10 @@ def new(name: str, template: str, project_root: Path):
 @click.option("--project-root", type=click.Path(path_type=Path), default=Path.cwd())
 @click.option("--system", default="local-workstation")
 def run(experiment_name: str, overrides: tuple[str], project_root: Path, system: str):
-    """Run an experiment locally (or via configured system) with optional Hydra overrides (key=value)."""
-    _discover_experiments(project_root / "experiments")
-    if experiment_name not in ExperimentRegistry.list():
-        console.print(f"[red]Experiment {experiment_name!r} not found[/red]")
-        console.print(f"Registered: {ExperimentRegistry.list()}")
-        sys.exit(1)
-
-    meta = ExperimentRegistry.get(experiment_name)
-    # Apply overrides naively (k=v parsing) — Hydra integration deferred to v0.2
-    cfg = meta.config_cls()
-    for ov in overrides:
-        if "=" in ov:
-            k, v = ov.split("=", 1)
-            if hasattr(cfg, k):
-                cur = getattr(cfg, k)
-                try:
-                    v_cast = type(cur)(v)
-                except Exception:
-                    v_cast = v
-                setattr(cfg, k, v_cast)
-
-    reg = SystemRegistry.from_path()
-    spec = reg.get(system)
-    launcher = get_launcher(spec, output_root=project_root / "outputs")
-    # Pass the dataclass instance (not vars(cfg)): experiments take the config object
-    # by attribute (cfg.threads), per the @experiment contract and the `new` scaffold.
-    # The launcher already handles either form (isinstance(config, dict) else vars()).
-    result = launcher.run(meta.func, cfg)
+    """Run an experiment with optional key=value config overrides."""
+    meta = _require_experiment(experiment_name, project_root)
+    overrides_d = dict(o.split("=", 1) for o in overrides if "=" in o)
+    result = _run_one(meta, overrides_d, project_root, system)
     console.print(f"[green]Run complete.[/green] Output: {result['run_dir']}")
     if result.get("returned"):
         console.print(f"Returned: {result['returned']}")
@@ -137,13 +146,26 @@ def run(experiment_name: str, overrides: tuple[str], project_root: Path, system:
 @main.command()
 @click.argument("experiment_name")
 @click.argument("sweep_spec", nargs=-1)
-def sweep(experiment_name: str, sweep_spec: tuple[str]):
-    """Sweep parameters (e.g., tau=5,10,20 seed=0,1,2). v0.1 runs locally serially; Hydra multirun in v0.2."""
-    console.print(f"[yellow]Sweep for {experiment_name}[/yellow]")
-    console.print(f"Params: {sweep_spec}")
-    # v0.1 minimal: just expand the product and call run()
-    # (Full Hydra multirun integration is a v0.2 enhancement.)
-    console.print("[yellow]v0.1: local serial sweep not yet wired. Coming in v0.2.[/yellow]")
+@click.option("--project-root", type=click.Path(path_type=Path), default=Path.cwd())
+@click.option("--system", default="local-workstation")
+def sweep(experiment_name: str, sweep_spec: tuple[str], project_root: Path, system: str):
+    """Sweep parameters over a cross-product, e.g. `tau=5,10,20 seed=0,1` → 6 runs.
+
+    Runs locally and serially; each combination is its own tracked run + manifest.
+    """
+    meta = _require_experiment(experiment_name, project_root)
+    axes: dict[str, list[str]] = {}
+    for spec in sweep_spec:
+        if "=" in spec:
+            k, vs = spec.split("=", 1)
+            axes[k] = vs.split(",")
+    keys = list(axes)
+    combos = list(itertools.product(*(axes[k] for k in keys))) if keys else [()]
+    console.print(f"[cyan]Sweep {experiment_name}: {len(combos)} run(s)[/cyan]")
+    for combo in combos:
+        overrides_d = dict(zip(keys, combo, strict=False))
+        result = _run_one(meta, overrides_d, project_root, system)
+        console.print(f"  {overrides_d} → {result['run_dir']}")
 
 
 @main.command()

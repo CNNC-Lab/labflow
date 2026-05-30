@@ -13,6 +13,7 @@ All notable changes to `labflow` are documented here. Format adheres to [Keep a 
 
 ### Added
 - `examples/scaling/` — strong and weak scaling study of a Brunel balanced random network in NEST, end-to-end as labflow experiments, with a scaling analysis.
+- `labflow sweep` implemented — runs a cross-product of parameter values as individual tracked runs (was a placeholder).
 - `balanced_random_network` worked example.
 
 ## [0.1.0] — 2026-04-20

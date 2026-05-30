@@ -91,8 +91,10 @@ def test_cli_manifest_prints_file(tmp_path: Path):
     assert "experiment" in result.output
 
 
-def test_cli_sweep_placeholder():
+def test_cli_sweep_unknown_experiment(tmp_path):
+    # sweep now discovers experiments and errors clearly on an unknown name
+    # (the cross-product run path is shared with `run` via `_run_one`).
     runner = CliRunner()
-    result = runner.invoke(main, ["sweep", "my_exp", "tau=5,10"])
-    assert result.exit_code == 0
-    assert "my_exp" in result.output or "sweep" in result.output.lower()
+    result = runner.invoke(main, ["sweep", "nope", "tau=5,10", "--project-root", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "not found" in result.output.lower()
