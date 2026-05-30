@@ -48,11 +48,12 @@ nav:
       - Apptainer: guides/backends/apptainer.md
     - Systems:
       - Local: guides/systems/local.md
-      - Deucalion ARM: guides/systems/deucalion-arm.md
-      - Deucalion x86: guides/systems/deucalion-x86.md
-      - Deucalion GPU: guides/systems/deucalion-gpu.md
+      - ARM cluster: guides/systems/arm.md
+      - x86 cluster: guides/systems/x86.md
+      - GPU cluster: guides/systems/gpu.md
   - Examples:
     - OU simulation: examples/ou-simulation.md
+    - NEST scaling study: examples/scaling.md
   - Contributing:
     - Development: contributing/development.md
 

@@ -49,3 +49,9 @@ Thumbs.db
 
 # MkDocs build output
 site/
+
+# run artifacts + built docs
+outputs/
+**/outputs/
+site/
+scaling.png

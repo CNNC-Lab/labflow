@@ -1,4 +1,4 @@
-"""Apptainer / Singularity container resolver (default on Deucalion)."""
+"""Apptainer / Singularity container resolver (common HPC default)."""
 
 from __future__ import annotations
 

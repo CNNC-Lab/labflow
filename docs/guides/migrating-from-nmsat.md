@@ -21,7 +21,7 @@ NMSAT (Duarte, 2015+) pioneered the "system registry + templated job scripts" pa
 3. **Decorate.** Add `@experiment(config=YourConfig, tags=[...])`.
 4. **Scaffold if needed.** `labflow new <name> --template simulation-nest` gives you a working NEST scaffold you can fill.
 5. **Register systems.** Copy relevant entries from `paths.py` into `hpc-systems.yaml`, converting cluster-specific details (partition names, modules).
-6. **Translate the SLURM template.** NMSAT's `{{ placeholder }}` → Jinja2 `{{ placeholder }}` (mostly identical). Lift verbatim; add Jinja2 conditionals for Deucalion ARM vs. x86 vs. GPU specifics.
+6. **Translate the SLURM template.** NMSAT's `{{ placeholder }}` → Jinja2 `{{ placeholder }}` (mostly identical). Lift verbatim; add Jinja2 conditionals for ARM vs. x86 vs. GPU specifics.
 7. **Submit.** `labflow submit <name> --system <s>`.
 
 ## What's gained

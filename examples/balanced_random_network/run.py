@@ -13,14 +13,14 @@ Run it:
     labflow run balanced_random_network                 # defaults
     labflow run balanced_random_network g=6 eta=2.5     # Hydra-style overrides
     labflow sweep balanced_random_network g=4,5,6 eta=1.5,2.0   # cross-product sweep
-    labflow submit balanced_random_network --system deucalion-arm --nodes 1 --time 0:30:00
+    labflow submit balanced_random_network --system cluster-arm --nodes 1 --time 0:30:00
 
 Without labflow (plain Python, fast iteration):
     python -c "from run import balanced_random_network, BRNConfig as C; \
                print(balanced_random_network(C(g=6.0)))"
 
 Requires the `nest-dev` conda env on the workstation (NEST 3.x), or an Apptainer image
-with NEST on Deucalion.
+with NEST on an HPC cluster.
 """
 
 from __future__ import annotations
@@ -57,8 +57,8 @@ class BRNConfig:
 @experiment(config=BRNConfig, tags=["nest", "simulation", "spiking", "example"])
 def balanced_random_network(cfg: BRNConfig) -> dict:
     """Simulate a Brunel balanced random network; return population firing statistics."""
-    import numpy as np
     import nest
+    import numpy as np
 
     # Thread discipline: configure the kernel BEFORE Create().
     nest.ResetKernel()

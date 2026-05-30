@@ -3,53 +3,65 @@
 [![CI](https://github.com/CNNC-Lab/labflow/actions/workflows/ci.yml/badge.svg)](https://github.com/CNNC-Lab/labflow/actions/workflows/ci.yml)
 [![Docs](https://github.com/CNNC-Lab/labflow/actions/workflows/docs.yml/badge.svg)](https://cnnc-lab.github.io/labflow/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 
-**Opinionated scientific workflow manager** — thin glue over Hydra + Submitit + (optional) Snakemake for reproducible experiments and transparent SLURM submission.
+**One experiment = one Python file + one dataclass.** labflow turns that into
+reproducible runs, parameter sweeps, and transparent SLURM submission — with a
+provenance manifest written for every run, automatically.
 
-Solves the NMSAT `parameters/computations` name-coupling pain: one experiment = one Python file + dataclass config. Parameter sweeps, SLURM submission, and provenance manifests are first-class.
-
-## Quickstart
+No glue scripts, no name-coupled `parameters/` + `computations/` modules, no
+hand-edited batch files. Write the science once; run it locally or on any SLURM
+cluster with the same command.
 
 ```bash
-pip install -e 'git+https://github.com/CNNC-Lab/labflow.git#egg=labflow[dev]'
+pip install labflow
 
-# in any project repo
-labflow new ou_stationary --template simulation-jax
-labflow run ou_stationary tau=5 sigma=2
-labflow sweep ou_stationary tau=5,10,20 seed=0,1,2,3
-labflow submit ou_stationary --system deucalion-arm --nodes 4 --time 2:00:00
-labflow status
-labflow report outputs/ou_stationary/<run-id>/
+labflow new my_sim --template simulation-nest     # scaffold an experiment
+labflow run my_sim threads=8 g=5.0                # run locally, tracked
+labflow sweep my_sim g=4,5,6 seed=0,1,2           # cross-product sweep
+labflow submit my_sim --system cluster-arm --nodes 4 --time 2:00:00   # → SLURM
+labflow report outputs/my_sim/<run-id>/           # results + provenance
 ```
 
 ## Why labflow?
 
-- **One file per experiment.** A dataclass config and a function — that's it.
-- **Transparent SLURM.** Submit with `--system deucalion-arm --nodes 4` and labflow renders the Jinja2 template from the shared HPC system registry.
-- **Backend-agnostic env management.** Conda, uv, poetry, venv, pixi, apptainer — each experiment can pick.
-- **Provenance manifest per run.** Git SHA, env hash, seed, hardware, wall time — auto-written.
-- **Lab-first.** Built for computational neuroscience workflows: NEST, JAX/diffrax/optax, JAXley, SBI, Optuna, marimo.
+- **One file per experiment.** A `@experiment` function that takes a config dataclass and returns a dict. That's the whole contract.
+- **Run anywhere, unchanged.** The same experiment runs in-process locally or as a SLURM job — only `--system` changes. Systems are described once in a small YAML registry; labflow renders the batch script from a Jinja2 template.
+- **Provenance for free.** Every run writes `manifest.json`: git SHA, config, seed, system, hardware, wall time, results.
+- **Backend-agnostic environments.** conda · uv · poetry · venv · pixi · apptainer — each experiment picks via a one-method resolver interface.
+- **Sweeps + HPO.** Built-in cross-product sweeps; templates for Optuna and Ray Tune.
+- **Lab-grade defaults.** Designed for scientific Python on HPC: NEST/NESTML, JAX + diffrax + optax, JAXley, SBI, Optuna, marimo.
+
+Lightweight by default — the core depends only on `submitit`, `jinja2`, `pyyaml`,
+`click`, `rich`, and `gitpython`. Hydra-based config composition is an optional
+extra (`pip install labflow[hydra]`).
+
+## Worked example: NEST scaling study
+
+`examples/scaling/` runs **strong** and **weak** scaling of a Brunel balanced
+random network in NEST, as labflow experiments — submit the sweep, collect the
+manifests, and get speedup/efficiency curves. See
+[the scaling example](https://cnnc-lab.github.io/labflow/examples/scaling/).
 
 ## Documentation
 
-Full docs at [cnnc-lab.github.io/labflow](https://cnnc-lab.github.io/labflow/). Start with:
+Full docs: **[cnnc-lab.github.io/labflow](https://cnnc-lab.github.io/labflow/)**
 
 - [Install](https://cnnc-lab.github.io/labflow/getting-started/install/)
 - [First experiment](https://cnnc-lab.github.io/labflow/getting-started/first-experiment/)
 - [First SLURM submission](https://cnnc-lab.github.io/labflow/getting-started/first-slurm-submission/)
-- [Migrating from NMSAT](https://cnnc-lab.github.io/labflow/guides/migrating-from-nmsat/)
+- [HPC systems registry](https://cnnc-lab.github.io/labflow/concepts/hpc-systems-registry/) — how to add your cluster
 
 ## Spiritual predecessor
 
-labflow is a clean-slate redesign inspired by [NMSAT](https://github.com/rcfduarte/nmsat) (Duarte, 2015+). NMSAT pioneered the "system registry + templated job scripts" pattern for scientific Python on HPC clusters; labflow modernizes it with YAML configs, Hydra composition, Submitit + SLURM native, and an env-backend resolver interface.
-
-## Contributing
-
-See [CONTRIBUTING.md](https://cnnc-lab.github.io/labflow/contributing/development/).
+A clean-slate redesign inspired by [NMSAT](https://github.com/rcfduarte/nmsat)
+(Duarte, 2015+), which pioneered the "system registry + templated job scripts"
+pattern for scientific Python on HPC. labflow modernizes it: YAML configs,
+Submitit + SLURM, and an env-backend resolver interface.
 
 ## Citation
 
-If you use labflow in your research, please cite (see [`CITATION.cff`](CITATION.cff)).
+If labflow helps your research, please cite it — see [`CITATION.cff`](CITATION.cff).
 
 ## License
 

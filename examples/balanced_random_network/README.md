@@ -11,7 +11,7 @@ pip install -e ~/repos/labflow
 labflow run balanced_random_network                 # defaults (1000 E + 250 I, g=5, eta=2)
 labflow run balanced_random_network g=6 eta=2.5     # inhibition-dominated, mean-driven
 labflow sweep balanced_random_network g=4,5,6       # sweep relative inhibition
-labflow submit balanced_random_network --system deucalion-arm --time 0:30:00 --dry-run
+labflow submit balanced_random_network --system cluster-arm --time 0:30:00 --dry-run
 
 # without labflow:
 python -c "from run import balanced_random_network, BRNConfig as C; print(balanced_random_network(C(g=6.0)))"

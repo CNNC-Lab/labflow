@@ -8,8 +8,8 @@ authors:
 repository-code: "https://github.com/CNNC-Lab/labflow"
 url: "https://cnnc-lab.github.io/labflow/"
 license: MIT
-version: "0.1.0"
-date-released: "2026-04-20"
+version: "0.2.0"
+date-released: "2026-05-30"
 keywords:
   - scientific computing
   - workflow

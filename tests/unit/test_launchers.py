@@ -43,7 +43,7 @@ def test_slurm_render_template(tmp_path: Path):
     )
 
     spec = SystemSpec(
-        name="deucalion-arm",
+        name="cluster-arm",
         queueing_system="slurm",
         arch="aarch64",
         node={"cores": 48, "memory_gb": 32, "gpus": 0},

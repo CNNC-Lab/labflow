@@ -1,7 +1,7 @@
 """NEST simulation experiment template.
 
-For workstation dev: expects nest-dev conda env (per HOWTO-NEST-dev.md).
-For Deucalion: paired with an Apptainer image containing NEST.
+For workstation dev: expects nest-dev conda env.
+On a cluster: pair with an Apptainer image containing NEST.
 """
 
 from __future__ import annotations
