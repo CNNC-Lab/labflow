@@ -125,7 +125,10 @@ def run(experiment_name: str, overrides: tuple[str], project_root: Path, system:
     reg = SystemRegistry.from_path()
     spec = reg.get(system)
     launcher = get_launcher(spec, output_root=project_root / "outputs")
-    result = launcher.run(meta.func, vars(cfg))
+    # Pass the dataclass instance (not vars(cfg)): experiments take the config object
+    # by attribute (cfg.threads), per the @experiment contract and the `new` scaffold.
+    # The launcher already handles either form (isinstance(config, dict) else vars()).
+    result = launcher.run(meta.func, cfg)
     console.print(f"[green]Run complete.[/green] Output: {result['run_dir']}")
     if result.get("returned"):
         console.print(f"Returned: {result['returned']}")
