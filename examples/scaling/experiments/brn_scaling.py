@@ -29,8 +29,10 @@ class ScalingConfig:
     threads: int = 1  # OpenMP threads (local_num_threads)
     n_per_thread: int = 2500  # WEAK scaling: total neurons = n_per_thread * threads
     n_total_fixed: int = 0  # STRONG scaling: if >0, use this fixed total (ignores n_per_thread)
-    # --- network ---
-    epsilon: float = 0.1  # connection probability (sparse random)
+    # --- network (FIXED in-degree: connections scale linearly with N, so
+    #     per-neuron work is constant — the right form for scaling studies) ---
+    c_exc: int = 1000  # excitatory in-degree (connections received per neuron)
+    c_inh: int = 250  # inhibitory in-degree
     g: float = 5.0  # relative inhibitory strength (J_inh = -g*J)
     eta: float = 2.0  # external rate as multiple of threshold rate
     J: float = 0.1  # excitatory PSP amplitude (mV)
@@ -54,8 +56,8 @@ def brn_scaling(cfg: ScalingConfig) -> dict:
     n_total = cfg.n_total_fixed if cfg.n_total_fixed > 0 else cfg.n_per_thread * cfg.threads
     n_exc = (n_total * 4) // 5
     n_inh = n_total - n_exc
-    c_exc = max(1, int(cfg.epsilon * n_exc))  # excitatory in-degree
-    c_inh = max(1, int(cfg.epsilon * n_inh))  # inhibitory in-degree
+    c_exc = cfg.c_exc  # excitatory in-degree (fixed — constant per-neuron work)
+    c_inh = cfg.c_inh  # inhibitory in-degree (fixed)
 
     # External drive: rate relative to the network's threshold (rheobase) rate.
     nu_th = cfg.V_th_mV / (cfg.J * c_exc * cfg.tau_m_ms)  # kHz (mV / (mV*ms))
