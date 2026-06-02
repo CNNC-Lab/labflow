@@ -63,15 +63,18 @@ def _run_one(meta, overrides: dict[str, str], project_root: Path, system: str) -
     The dataclass instance (not a dict) is passed to the launcher, per the
     @experiment contract.
     """
-    cfg = meta.config_cls()
+    defaults = meta.config_cls()
+    casted: dict = {}
     for k, v in overrides.items():
-        if hasattr(cfg, k):
-            cur = getattr(cfg, k)
+        if hasattr(defaults, k):
+            cur = getattr(defaults, k)
             try:
-                v_cast = type(cur)(v)
+                casted[k] = type(cur)(v)
             except Exception:
-                v_cast = v
-            setattr(cfg, k, v_cast)
+                casted[k] = v
+    # Build with overrides as kwargs so dataclass __post_init__ derives fields
+    # (e.g. label, module) from the FINAL values, not the defaults.
+    cfg = meta.config_cls(**casted)
     reg = SystemRegistry.from_path()
     spec = reg.get(system)
     proj = _load_project_config(project_root)
