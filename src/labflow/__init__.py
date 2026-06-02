@@ -20,7 +20,15 @@ CLI:
     - labflow manifest <run-id>
 """
 
+from labflow.context import current_output_dir
 from labflow.registry import ExperimentRegistry, SystemRegistry, experiment, sweep
 
 __version__ = "0.1.0"
-__all__ = ["ExperimentRegistry", "SystemRegistry", "__version__", "experiment", "sweep"]
+__all__ = [
+    "ExperimentRegistry",
+    "SystemRegistry",
+    "__version__",
+    "current_output_dir",
+    "experiment",
+    "sweep",
+]

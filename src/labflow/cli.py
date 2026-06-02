@@ -74,7 +74,9 @@ def _run_one(meta, overrides: dict[str, str], project_root: Path, system: str) -
             setattr(cfg, k, v_cast)
     reg = SystemRegistry.from_path()
     spec = reg.get(system)
-    launcher = get_launcher(spec, output_root=project_root / "outputs")
+    proj = _load_project_config(project_root)
+    output_root = project_root / proj.get("output_root", "outputs")
+    launcher = get_launcher(spec, output_root=output_root)
     return launcher.run(meta.func, cfg)
 
 
