@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import itertools
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -78,7 +79,13 @@ def _run_one(meta, overrides: dict[str, str], project_root: Path, system: str) -
     reg = SystemRegistry.from_path()
     spec = reg.get(system)
     proj = _load_project_config(project_root)
-    output_root = project_root / proj.get("output_root", "outputs")
+    # LABFLOW_OUTPUT_ROOT (absolute) overrides the .labflow.yaml output_root.
+    # Used on HPC to redirect run data to a dedicated /projects results folder
+    # (outside the git working tree) without changing the committed config.
+    if os.environ.get("LABFLOW_OUTPUT_ROOT"):
+        output_root = Path(os.environ["LABFLOW_OUTPUT_ROOT"])
+    else:
+        output_root = project_root / proj.get("output_root", "outputs")
     launcher = get_launcher(spec, output_root=output_root)
     return launcher.run(meta.func, cfg)
 
