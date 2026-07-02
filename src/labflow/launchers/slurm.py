@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from labflow.registry import SystemSpec
 
-DEFAULT_TEMPLATE_DIR = Path.home() / ".claude" / "contexts" / "hpc-templates" / "slurm"
+DEFAULT_TEMPLATE_DIR = Path(__file__).parent.parent / "templates" / "slurm"
 
 
 def render_sbatch(

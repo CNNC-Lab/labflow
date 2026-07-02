@@ -1,0 +1,70 @@
+#!/bin/bash
+#SBATCH --job-name={{ job_name }}
+#SBATCH --account={{ account }}
+#SBATCH --partition={{ partition }}
+#SBATCH --time={{ walltime }}
+#SBATCH --array=0-{{ n_workers - 1 }}{% if array_throttle %}%{{ array_throttle }}{% endif %}
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task={{ cpus_per_task | default(12) }}
+#SBATCH --mem={{ mem | default('7500M') }}
+#SBATCH --hint=nomultithread
+#SBATCH --output={{ output_dir }}/worker-%a.out
+#SBATCH --error={{ output_dir }}/worker-%a.err
+
+# ---------------------------------------------------------------------------
+# Optuna distributed-study array (NOT MPI).
+# Each array task = one independent Optuna worker that opens the SHARED SQLite
+# study with load_if_exists=True and pulls trials until the study budget is met.
+#
+# A64FX topology: 48 cores / 4 CMGs (NUMA nodes) => 12 cores per CMG.
+# Run 4 workers per node by submitting an array; pin EACH worker to ONE CMG
+# via numactl --cpunodebind so workers don't thrash each other's memory.
+# Map worker -> CMG with (SLURM_ARRAY_TASK_ID % 4); SQLite serializes writes,
+# so the workers coordinate purely through the study file.
+# ---------------------------------------------------------------------------
+
+mkdir -p {{ output_dir }}
+
+# Run from the repo so labflow can discover @experiment modules (it rglobs
+# experiments/**/*.py relative to cwd). Outputs do NOT land here: the
+# LABFLOW_OUTPUT_ROOT override below redirects every run dir to the dedicated
+# /projects results root, OUTSIDE the git working tree.
+cd {{ repo_root | default(project_scratch) }}
+
+# Dedicated, experiment-named results root on /projects (Lustre). labflow writes
+# <results_root>/<experiment>/<model>/<run-id>/{<exp>__<model>.db,results.json,
+# manifest.json,figs/}. Absolute path => never the repo-root *.db clutter.
+export LABFLOW_OUTPUT_ROOT={{ results_root }}
+
+{% for module in modules %}
+module load {{ module }}
+{% endfor %}
+{% if activate_script %}
+source {{ activate_script }}
+{% endif %}
+{% if eessi %}
+source {{ eessi_init }}
+{% endif %}
+
+# OpenMP: one CMG worth of threads, hard-bound to physical cores.
+export OMP_NUM_THREADS={{ cpus_per_task | default(12) }}
+export OMP_PROC_BIND=TRUE
+export OMP_PLACES=cores
+
+# One CMG per worker (4 CMGs per A64FX node).
+CMG=$(( SLURM_ARRAY_TASK_ID % 4 ))
+
+echo "worker=${SLURM_ARRAY_TASK_ID} host=$(hostname) arch=$(uname -m) cmg=${CMG} threads=${OMP_NUM_THREADS}"
+
+# Shared study DB lives on /projects (Lustre). All workers attach with
+# load_if_exists=True; the FIRST to arrive creates it.
+export OPTUNA_STORAGE="sqlite:///{{ study_db }}"
+
+numactl --cpunodebind=${CMG} --membind=${CMG} \
+    python {{ entry_point }} \
+        --study-name {{ study_name }} \
+        --storage "${OPTUNA_STORAGE}" \
+        --n-trials {{ trials_per_worker | default(0) }} \
+        {{ extra_args | default('') }}

@@ -2,6 +2,11 @@
 
 All notable changes to `labflow` are documented here. Format adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+- SLURM sbatch Jinja2 templates (`cpu-mpi`, `cpu-openmp`, `gpu-single`, `gpu-multi`, `optuna-array`, `base`) are now bundled with the package at `src/labflow/templates/slurm/`, instead of being read from `~/.claude/contexts/hpc-templates/slurm` on the invoking user's home directory. The old default silently required every collaborator to have a personal copy of one maintainer's dotfiles, producing `TemplateNotFound` for anyone else on a shared cluster account. `render_sbatch(..., template_dir=...)` still accepts an explicit override for local customization.
+
 ## [0.2.0] — 2026-05-30
 
 ### Fixed

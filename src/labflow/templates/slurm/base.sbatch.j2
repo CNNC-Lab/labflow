@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name={{ job_name }}
+#SBATCH --account={{ account }}
+#SBATCH --partition={{ partition }}
+#SBATCH --time={{ walltime }}
+#SBATCH --nodes={{ nodes }}
+#SBATCH --ntasks-per-node={{ ntasks_per_node }}
+#SBATCH --cpus-per-task={{ cpus_per_task }}
+#SBATCH --mem={{ mem }}
+{% if exclusive %}#SBATCH --exclusive{% endif %}
+#SBATCH --output={{ output_dir }}/stdout.log
+#SBATCH --error={{ output_dir }}/stderr.log
+
+# Jobs must run from /projects/$project on Deucalion
+mkdir -p {{ output_dir }}
+cd {{ project_scratch }}
+
+{% for module in modules %}
+module load {{ module }}
+{% endfor %}
+
+{% if eessi %}
+source {{ eessi_init }}
+{% endif %}

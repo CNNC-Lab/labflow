@@ -1,0 +1,29 @@
+#!/bin/bash
+#SBATCH --job-name={{ job_name }}
+#SBATCH --account={{ account }}
+#SBATCH --partition={{ partition }}
+#SBATCH --time={{ walltime }}
+#SBATCH --nodes={{ nodes }}
+#SBATCH --tasks-per-node={{ gpus | default(4) }}
+#SBATCH --gpus={{ (gpus | default(4)) * (nodes | default(1)) }}
+#SBATCH --cpus-per-task={{ cpus_per_task }}
+#SBATCH --mem={{ mem }}
+{% if exclusive %}#SBATCH --exclusive{% endif %}
+#SBATCH --output={{ output_dir }}/stdout.log
+#SBATCH --error={{ output_dir }}/stderr.log
+
+mkdir -p {{ output_dir }}
+cd {{ project_scratch }}
+
+{% for module in modules %}
+module load {{ module }}
+{% endfor %}
+
+export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export MASTER_PORT=29500
+
+{% if container %}
+srun singularity exec --nv {{ container }} python {{ entry_point }}
+{% else %}
+srun python {{ entry_point }}
+{% endif %}

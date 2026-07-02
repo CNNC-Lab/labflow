@@ -7,7 +7,7 @@ NMSAT (Duarte, 2015+) pioneered the "system registry + templated job scripts" pa
 | NMSAT concept | labflow equivalent |
 |---|---|
 | `defaults/paths.py` (Python dict) | `~/.claude/contexts/hpc-systems.yaml` |
-| `defaults/cluster_templates/*_jdf.sh` | `~/.claude/contexts/hpc-templates/slurm/*.sbatch.j2` |
+| `defaults/cluster_templates/*_jdf.sh` | `labflow`'s bundled `src/labflow/templates/slurm/*.sbatch.j2` |
 | `projects/<p>/parameters/<name>.py` | part of `experiments/<name>.py` (dataclass) |
 | `projects/<p>/computations/<name>.py` | part of `experiments/<name>.py` (function) |
 | `main.py run_experiment(...)` | `labflow run <name>` |
